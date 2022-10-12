@@ -54,7 +54,7 @@ class SourceGoogleCalendar(Source):
                 SERVICE_ACCOUNT_JSON, scopes=SCOPES
             )
 
-            subject = 'jordan.young@trydatabook.com'
+            subject = ''.join(config['emails'][0],'@trydatabook.com')
             delegated_credentials = credentials.with_subject(subject)
             service = build("calendar", "v3", credentials=delegated_credentials)
 
