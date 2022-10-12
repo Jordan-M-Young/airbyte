@@ -4,40 +4,28 @@ connectionSpecification:
   title: Google Calendar Source Spec
   type: object
   required:
+    - emails
+    - domains
     - credentials
-  additionalProperties: true
   properties:
-    spreadsheet_id:
+    emails:
+      title: Email Addresses
       type: string
-      title: Spreadsheet Link
-      description: >-
-        Enter the link to the Google spreadsheet you want to sync
       examples:
-        - https://docs.google.com/spreadsheets/d/1hLd9Qqti3UyLXZB2aFfUWDT7BG-arw2xy4HR3D-dwUb/edit
-    
-    whitelist:
-      type: object
-      title: Whitelist
-      description: >- 
-        Enter a whitelist in json format
+        - '{ emails: ["john.test@databook.com",.....]}'
+    domains:
+      title: Domains
+      type: string
       examples:
-        - '{ "emails": [a@databook.com,...], "domains": [@salesforce.com,....]}'
-      required:
-        - emails
-        - domains
+        - '{ domains: ["microsoft.com", "salesforce.com".....]}'
+    month_window_size:
+      title: Window Size (in months)
+      type: integer
+      default: 1
     credentials:
-      type: object
-      title: Authentication
-      description: >-
-        Credentials for connecting to the Google Sheets API
-authSpecification:
-  auth_type: oauth2.0
-  oauth2Specification:
-    rootObject:
-      - credentials
-      - 0
-    oauthFlowInitParameters:
-      - ["client_id"]
-      - ["client_secret"]
-    oauthFlowOutputParameters:
-      - ["refresh_token"]
+      type: string
+      title: Service Account Credentials.
+      description: 'Enter your Google Cloud <a href="https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys">service account key</a> in JSON format'
+      airbyte_secret: true
+      examples:
+        - '{ "type": "service_account", "project_id": YOUR_PROJECT_ID, "private_key_id": YOUR_PRIVATE_KEY, ... }'

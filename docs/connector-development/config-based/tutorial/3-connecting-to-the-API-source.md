@@ -63,42 +63,54 @@ More details on the connector definition file can be found in the [overview](../
 
 Let's fill this out these TODOs with the information found in the [Exchange Rates API docs](https://apilayer.com/marketplace/exchangerates_data-api).
 
-1. We'll first set the API's base url. According to the API documentation, the base url is `"https://api.apilayer.com"`.
+1. First, let's rename the stream from `customers` to `rates`, and update the primary key to `date`.
+
+```yaml
+streams:
+  - type: DeclarativeStream
+    $options:
+      name: "rates"
+    primary_key: "date"
+```
+
+and update the references in the `check` block
+
+```yaml
+check:
+  type: CheckStream
+  stream_names: [ "rates" ]
+```
+
+Adding the reference in the `check` tells the `check` operation to use that stream to test the connection.
+
+2. Next we'll set the base url.
+   According to the API documentation, the base url is `"https://api.apilayer.com"`.
 
 ```yaml
 definitions:
   <...>
-  requester:
-    url_base: "https://api.apilayer.com"
-```
-
-2. Then, let's rename the stream from `customers` to `rates`, update the primary key to `date`, and set the path to "/exchangerates_data/latest" as per the API's documentation. This path is specific to the stream, so we'll set it within the `rates_stream` definition
-
-```yaml
-  rates_stream:
-    $ref: "*ref(definitions.base_stream)"
+  retriever:
+    type: SimpleRetriever
     $options:
-      name: "rates"
-      primary_key: "date"
-      path: "/exchangerates_data/latest"
+      url_base: "https://api.apilayer.com"
 ```
 
-We'll also update the reference in the `streams` block
+3. We can fetch the latest data by submitting a request to the `/latest` API endpoint. This path is specific to the stream, so we'll set it within the `rates_stream` definition, at the `retriever` level.
 
 ```yaml
 streams:
-  - "*ref(definitions.rates_stream)"
+  - type: DeclarativeStream
+    $options:
+      name: "rates"
+    primary_key: "date"
+    schema_loader:
+      $ref: "*ref(definitions.schema_loader)"
+    retriever:
+      $ref: "*ref(definitions.retriever)"
+      requester:
+        $ref: "*ref(definitions.requester)"
+        path: "/exchangerates_data/latest"
 ```
-
-3. Update the references in the `check` block
-
-```yaml
-check:
-  stream_names:
-    - "rates"
-```
-
-Adding the reference in the `check` tells the `check` operation to use that stream to test the connection.
 
 4. Next, we'll set up the authentication.
    The Exchange Rates API requires an access key to be passed as header named "apikey".
@@ -108,7 +120,8 @@ Adding the reference in the `check` tells the `check` operation to use that stre
 definitions:
   <...>
   requester:
-    url_base: "https://api.apilayer.com"
+    type: HttpRequester
+    name: "{{ options['name'] }}"
     http_method: "GET"
     authenticator:
       type: ApiKeyAuthenticator
@@ -134,11 +147,17 @@ The full connector definition should now look like
 version: "0.1.0"
 
 definitions:
+  schema_loader:
+    type: JsonSchema
+    file_path: "./source_exchange_rates_tutorial/schemas/{{ options['name'] }}.json"
   selector:
+    type: RecordSelector
     extractor:
+      type: DpathExtractor
       field_pointer: [ ]
   requester:
-    url_base: "https://api.apilayer.com"
+    type: HttpRequester
+    name: "{{ options['name'] }}"
     http_method: "GET"
     authenticator:
       type: ApiKeyAuthenticator
@@ -148,27 +167,31 @@ definitions:
       request_parameters:
         base: "{{ config['base'] }}"
   retriever:
+    type: SimpleRetriever
+    $options:
+      url_base: "https://api.apilayer.com"
+    name: "{{ options['name'] }}"
+    primary_key: "{{ options['primary_key'] }}"
     record_selector:
       $ref: "*ref(definitions.selector)"
     paginator:
       type: NoPagination
-    requester:
-      $ref: "*ref(definitions.requester)"
-  base_stream:
-    retriever:
-      $ref: "*ref(definitions.retriever)"
-  rates_stream:
-    $ref: "*ref(definitions.base_stream)"
-    $options:
-      name: "rates"
-      primary_key: "date"
-      path: "/exchangerates_data/latest"
 
 streams:
-  - "*ref(definitions.rates_stream)"
+  - type: DeclarativeStream
+    $options:
+      name: "rates"
+    primary_key: "date"
+    schema_loader:
+      $ref: "*ref(definitions.schema_loader)"
+    retriever:
+      $ref: "*ref(definitions.retriever)"
+      requester:
+        $ref: "*ref(definitions.requester)"
+        path: "/exchangerates_data/latest"
 check:
-  stream_names:
-    - "rates"
+  type: CheckStream
+  stream_names: [ "rates" ]
 ```
 
 We can now run the `check` operation, which verifies the connector can connect to the API source.

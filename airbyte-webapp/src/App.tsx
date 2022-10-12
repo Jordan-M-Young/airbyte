@@ -1,5 +1,4 @@
 import React, { Suspense } from "react";
-import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
@@ -48,9 +47,7 @@ const Services: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => (
             <ConfirmationModalService>
               <ModalServiceProvider>
                 <FormChangeTrackerService>
-                  <HelmetProvider>
-                    <ApiServices>{children}</ApiServices>
-                  </HelmetProvider>
+                  <ApiServices>{children}</ApiServices>
                 </FormChangeTrackerService>
               </ModalServiceProvider>
             </ConfirmationModalService>

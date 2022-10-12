@@ -1,35 +1,44 @@
 version: "0.1.0"
 
 definitions:
+  schema_loader:
+    type: JsonSchema
+    file_path: "./source_{{snakeCase name}}/schemas/\{{ options['name'] }}.json"
   selector:
+    type: RecordSelector
     extractor:
+      type: DpathExtractor
       field_pointer: []
   requester:
-    url_base: "https://example.com"
+    type: HttpRequester
+    name: "\{{ options['name'] }}"
     http_method: "GET"
     authenticator:
       type: BearerAuthenticator
       api_token: "\{{ config['api_key'] }}"
   retriever:
+    type: SimpleRetriever
+    $options:
+      url_base: TODO "your_api_base_url"
+    name: "\{{ options['name'] }}"
+    primary_key: "\{{ options['primary_key'] }}"
     record_selector:
       $ref: "*ref(definitions.selector)"
     paginator:
       type: NoPagination
-    requester:
-      $ref: "*ref(definitions.requester)"
-  base_stream:
-    retriever:
-      $ref: "*ref(definitions.retriever)"
-  customers_stream:
-    $ref: "*ref(definitions.base_stream)"
-    $options:
-      name: "customers"
-      primary_key: "id"
-      path: "/example"
 
 streams:
-  - "*ref(definitions.customers_stream)"
-
+  - type: DeclarativeStream
+    $options:
+      name: "customers"
+    primary_key: "id"
+    schema_loader:
+      $ref: "*ref(definitions.schema_loader)"
+    retriever:
+      $ref: "*ref(definitions.retriever)"
+      requester:
+        $ref: "*ref(definitions.requester)"
+        path: TODO "your_endpoint_path"
 check:
-  stream_names:
-    - "customers"
+  type: CheckStream
+  stream_names: ["customers"]

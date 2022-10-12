@@ -11,7 +11,6 @@ required:
   - catalog
   - manual
   - namespaceDefinition
-  - geography
 additionalProperties: false
 properties:
   namespaceDefinition:
@@ -115,5 +114,3 @@ properties:
     format: uuid
   resourceRequirements:
     "$ref": ResourceRequirements.yaml
-  geography:
-    "$ref": Geography.yaml

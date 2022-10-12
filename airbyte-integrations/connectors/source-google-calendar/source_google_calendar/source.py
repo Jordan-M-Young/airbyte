@@ -4,7 +4,8 @@
 
 
 import json
-from datetime import datetime
+import datetime
+from re import sub
 from typing import Dict, Generator
 
 from airbyte_cdk.logger import AirbyteLogger
@@ -16,13 +17,15 @@ from airbyte_cdk.models import (
     AirbyteStream,
     ConfiguredAirbyteCatalog,
     Status,
-    Type,
-    SyncMode
-)
+    Type
+    )
 from airbyte_cdk.sources import Source
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import json
+from collections import defaultdict
+import source_google_calendar.utils as ut
 
 class SourceGoogleCalendar(Source):
     def check(self, logger: AirbyteLogger, config: json) -> AirbyteConnectionStatus:
@@ -38,7 +41,8 @@ class SourceGoogleCalendar(Source):
         :return: AirbyteConnectionStatus indicating a Success or Failure
         """
         try:
-            SERVICE_ACCOUNT_JSON = config.get("credentials")
+
+            SERVICE_ACCOUNT_JSON = json.loads(config.get("credentials"))
 
 
 
@@ -92,15 +96,14 @@ class SourceGoogleCalendar(Source):
         json_schema = {  # Example
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
-            "properties": {"columnName": {"type": "string"}},
-            "supported_sync_modes":['full_refresh']
+            "properties": {"data": {"type": "object"}},
         }
 
         # Not Implemented
 
 
 
-        streams.append(AirbyteStream(name=stream_name, json_schema=json_schema,))
+        streams.append(AirbyteStream(name=stream_name, json_schema=json_schema))
         return AirbyteCatalog(streams=streams)
 
     def read(
@@ -125,9 +128,15 @@ class SourceGoogleCalendar(Source):
 
         :return: A generator that produces a stream of AirbyteRecordMessage contained in AirbyteMessage object.
         """
-        SERVICE_ACCOUNT_JSON = config.get("credentials")
-        client_email = config.get('credentials').get('client_email')
+        
 
+
+        SERVICE_ACCOUNT_JSON = json.loads(config.get("credentials"))
+        client_email = SERVICE_ACCOUNT_JSON.get('client_email')
+
+        month_search_window_size = config.get('month_window_size')
+        target_companies = json.loads(config.get('domains')).get('domains')
+        subjects = json.loads(config.get("emails")).get('emails')
 
         SCOPES = ["https://www.googleapis.com/auth/calendar.events.readonly"]
 
@@ -137,29 +146,41 @@ class SourceGoogleCalendar(Source):
             SERVICE_ACCOUNT_JSON, scopes=SCOPES
         )
 
-        subject = 'jordan.young@trydatabook.com'
-        delegated_credentials = credentials.with_subject(subject)
-        service = build("calendar", "v3", credentials=delegated_credentials)
 
+        now = datetime.datetime.utcnow()  # 'Z' indicates UTC time
 
-        events_result = (
-        service.events()
-        .list(
-            calendarId=subject,  # account in question
-            maxResults=None  # max results to surface
-            # singleEvents=False,  # expand recurring events to instances of single events? True = yes
-            # orderBy="startTime",  # How to order events?
+        # gets a previous month and future month with respeect to right now based on the window size
+        # e.g. window size = 1: 1 month in the past 1 month in the future
+        past_month, future_month = ut.get_past_future_month(
+            now, periods=month_search_window_size
         )
-        .execute())
+
+        # dictionary to hold metadata for a given event
+        event_data = defaultdict(lambda: defaultdict(dict))
+
+        for subject in subjects:
+
+
+            try:
+                ut.extract_calendar(
+                    subject,
+                    credentials,
+                    event_data,
+                    target_companies,
+                    past_month,
+                    future_month
+                )
+            except Exception as e:
+                print(subject, "FAILED", e)
 
 
 
         stream_name = "google_calendar"  # Example
-        data = {"columnName": client_email}  # Example
+        data = {"data": event_data}  # Example
 
         # Not Implemented
 
         yield AirbyteMessage(
             type=Type.RECORD,
-            record=AirbyteRecordMessage(stream=stream_name, data=data, emitted_at=int(datetime.now().timestamp()) * 1000),
+            record=AirbyteRecordMessage(stream=stream_name, data=data, emitted_at=int(datetime.datetime.now().timestamp()) * 1000),
         )

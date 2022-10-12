@@ -161,8 +161,7 @@ class MySqlJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest {
     ((ObjectNode) config).put(JdbcUtils.USERNAME_KEY, "fake");
     final AirbyteConnectionStatus status = source.check(config);
     assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
-    // do not test for message since there seems to be flakiness where sometimes the test will get the
-    // message with
+    // do not test for message since there seems to be flakiness where sometimes the test will get the message with
     // State code: 08001 or State code: 28000
   }
 
@@ -293,5 +292,6 @@ class MySqlJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest {
   protected boolean supportsPerStream() {
     return true;
   }
+
 
 }

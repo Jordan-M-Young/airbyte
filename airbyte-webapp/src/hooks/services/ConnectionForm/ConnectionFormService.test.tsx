@@ -1,127 +1,217 @@
-import { act, renderHook } from "@testing-library/react-hooks";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react-hooks";
 import React from "react";
+import { MemoryRouter } from "react-router-dom";
 import mockConnection from "test-utils/mock-data/mockConnection.json";
 import mockDest from "test-utils/mock-data/mockDestinationDefinition.json";
+import mockWorkspace from "test-utils/mock-data/mockWorkspace.json";
 import { TestWrapper } from "test-utils/testutils";
 
-import { AirbyteCatalog, WebBackendConnectionRead } from "core/request/AirbyteClient";
-import { FormError } from "utils/errorStatusMessage";
+import { ConnectionScheduleType, WebBackendConnectionRead } from "core/request/AirbyteClient";
 
+import { ModalCancel } from "../Modal";
 import {
   ConnectionFormServiceProvider,
-  ConnectionOrPartialConnection,
+  ConnectionServiceProps,
   useConnectionFormService,
 } from "./ConnectionFormService";
 
+["services/workspaces/WorkspacesService"].forEach((s) =>
+  jest.mock(s, () => ({
+    useCurrentWorkspaceId: () => mockWorkspace.workspaceId,
+    useCurrentWorkspace: () => mockWorkspace,
+  }))
+);
+
+jest.mock("../FormChangeTracker", () => ({
+  useFormChangeTrackerService: () => ({ clearFormChange: () => null }),
+  useUniqueFormId: () => "blah",
+}));
 jest.mock("services/connector/DestinationDefinitionSpecificationService", () => ({
   useGetDestinationDefinitionSpecification: () => mockDest,
 }));
 
 describe("ConnectionFormService", () => {
-  const Wrapper: React.FC<Parameters<typeof ConnectionFormServiceProvider>[0]> = ({ children, ...props }) => (
+  const Wrapper: React.FC<ConnectionServiceProps> = ({ children, ...props }) => (
     <TestWrapper>
-      <ConnectionFormServiceProvider {...props}>{children}</ConnectionFormServiceProvider>
+      <MemoryRouter>
+        <ConnectionFormServiceProvider {...props}>{children}</ConnectionFormServiceProvider>
+      </MemoryRouter>
     </TestWrapper>
   );
 
-  const refreshSchema = jest.fn();
+  const onSubmit = jest.fn();
+  const onAfterSubmit = jest.fn();
+  const onCancel = jest.fn();
 
   beforeEach(() => {
-    refreshSchema.mockReset();
+    onSubmit.mockReset();
+    onAfterSubmit.mockReset();
+    onCancel.mockReset();
   });
 
-  it("should take a partial Connection", async () => {
-    const partialConnection: ConnectionOrPartialConnection = {
-      syncCatalog: mockConnection.syncCatalog as AirbyteCatalog,
-      source: mockConnection.source,
-      destination: mockConnection.destination,
-    };
-    const { result } = renderHook(useConnectionFormService, {
-      wrapper: Wrapper,
-      initialProps: {
-        connection: partialConnection,
-        mode: "create",
-        refreshSchema,
-      },
-    });
-
-    expect(result.current.connection).toEqual(partialConnection);
-  });
-
-  it("should take a full Connection", async () => {
+  it("should call onSubmit when submitted", async () => {
     const { result } = renderHook(useConnectionFormService, {
       wrapper: Wrapper,
       initialProps: {
         connection: mockConnection as WebBackendConnectionRead,
         mode: "create",
-        refreshSchema,
+        formId: Math.random().toString(),
+        onSubmit,
+        onAfterSubmit,
+        onCancel,
+        formDirty: false,
       },
     });
 
-    expect(result.current.connection).toEqual(mockConnection);
+    const resetForm = jest.fn();
+    const testValues: any = {};
+    await act(async () => {
+      await result.current.onFormSubmit(testValues, { resetForm } as any);
+    });
+
+    expect(resetForm).toBeCalledWith({ values: testValues });
+    expect(onSubmit).toBeCalledWith({
+      operations: [],
+      scheduleData: {
+        cron: {
+          cronExpression: undefined,
+          cronTimeZone: undefined,
+        },
+      },
+      syncCatalog: {
+        streams: undefined,
+      },
+    });
+    expect(onAfterSubmit).toBeCalledWith();
+    expect(result.current.errorMessage).toBe(null);
   });
 
-  describe("Error Message Generation", () => {
-    it("should show a validation error if the form is invalid and dirty", async () => {
+  const expectation = {
+    [ConnectionScheduleType.basic]: {
+      basicSchedule: {
+        timeUnit: undefined,
+        units: undefined,
+      },
+    },
+    [ConnectionScheduleType.manual]: undefined,
+    [ConnectionScheduleType.cron]: {
+      cron: {
+        cronExpression: undefined,
+        cronTimeZone: undefined,
+      },
+    },
+  };
+
+  Object.values(ConnectionScheduleType).forEach((scheduleType) => {
+    it(`should return expected results when onSubmit is called with ${scheduleType}`, async () => {
       const { result } = renderHook(useConnectionFormService, {
         wrapper: Wrapper,
         initialProps: {
           connection: mockConnection as WebBackendConnectionRead,
           mode: "create",
-          refreshSchema,
+          formId: Math.random().toString(),
+          onSubmit,
+          onAfterSubmit,
+          onCancel,
+          formDirty: false,
         },
       });
 
-      expect(result.current.getErrorMessage(false, true)).toBe(
-        "The form is invalid. Please make sure that all fields are correct."
-      );
-    });
+      const resetForm = jest.fn();
+      const testValues: any = {
+        scheduleType,
+      };
+      await act(async () => {
+        await result.current.onFormSubmit(testValues, { resetForm } as any);
+      });
 
-    it("should not show a validation error if the form is valid and dirty", async () => {
-      const { result } = renderHook(useConnectionFormService, {
-        wrapper: Wrapper,
-        initialProps: {
-          connection: mockConnection as WebBackendConnectionRead,
-          mode: "create",
-          refreshSchema,
+      expect(resetForm).toBeCalledWith({ values: testValues });
+      expect(onSubmit).toBeCalledWith({
+        operations: [],
+        scheduleData: expectation[scheduleType],
+        scheduleType,
+        syncCatalog: {
+          streams: undefined,
         },
       });
+      expect(onAfterSubmit).toBeCalledWith();
+      expect(result.current.errorMessage).toBe(null);
+    });
+  });
 
-      expect(result.current.getErrorMessage(true, true)).toBe(null);
+  it("should catch if onSubmit throws and generate an error message", async () => {
+    const errorMessage = "asdf";
+    onSubmit.mockImplementation(async () => {
+      throw new Error(errorMessage);
     });
 
-    it("should not show a validation error if the form is invalid and not dirty", async () => {
-      const { result } = renderHook(useConnectionFormService, {
-        wrapper: Wrapper,
-        initialProps: {
-          connection: mockConnection as WebBackendConnectionRead,
-          mode: "create",
-          refreshSchema,
-        },
-      });
-
-      expect(result.current.getErrorMessage(false, false)).toBe(null);
+    const { result } = renderHook(useConnectionFormService, {
+      wrapper: Wrapper,
+      initialProps: {
+        connection: mockConnection as WebBackendConnectionRead,
+        mode: "create",
+        formId: Math.random().toString(),
+        onSubmit,
+        onAfterSubmit,
+        onCancel,
+        formDirty: false,
+      },
     });
 
-    it("should show a message when given a submit error", () => {
-      const { result } = renderHook(useConnectionFormService, {
-        wrapper: Wrapper,
-        initialProps: {
-          connection: mockConnection as WebBackendConnectionRead,
-          mode: "create",
-          refreshSchema,
-        },
-      });
-
-      const errMsg = "asdf";
-      act(() => {
-        result.current.setSubmitError(new FormError(errMsg));
-      });
-
-      expect(result.current.getErrorMessage(false, false)).toBe(errMsg);
-      expect(result.current.getErrorMessage(false, true)).toBe(errMsg);
-      expect(result.current.getErrorMessage(true, false)).toBe(errMsg);
-      expect(result.current.getErrorMessage(true, true)).toBe(errMsg);
+    const resetForm = jest.fn();
+    const testValues: any = {};
+    await act(async () => {
+      await result.current.onFormSubmit(testValues, { resetForm } as any);
     });
+
+    expect(result.current.errorMessage).toBe(errorMessage);
+    expect(resetForm).not.toHaveBeenCalled();
+  });
+
+  it("should catch if onSubmit throws but not generate an error if it's a ModalCancel error", async () => {
+    onSubmit.mockImplementation(async () => {
+      throw new ModalCancel();
+    });
+
+    const { result } = renderHook(useConnectionFormService, {
+      wrapper: Wrapper,
+      initialProps: {
+        connection: mockConnection as WebBackendConnectionRead,
+        mode: "create",
+        formId: Math.random().toString(),
+        onSubmit,
+        onAfterSubmit,
+        onCancel,
+        formDirty: false,
+      },
+    });
+
+    const resetForm = jest.fn();
+    const testValues: any = {};
+    await act(async () => {
+      await result.current.onFormSubmit(testValues, { resetForm } as any);
+    });
+
+    expect(result.current.errorMessage).toBe(null);
+    expect(resetForm).not.toHaveBeenCalled();
+  });
+
+  it("should render the generic form invalid error message if the form is dirty and there has not been a submit error", async () => {
+    const { result } = renderHook(useConnectionFormService, {
+      wrapper: Wrapper,
+      initialProps: {
+        connection: mockConnection as WebBackendConnectionRead,
+        mode: "create",
+        formId: Math.random().toString(),
+        onSubmit,
+        onAfterSubmit,
+        onCancel,
+        formDirty: true,
+      },
+    });
+
+    expect(result.current.errorMessage).toBe("The form is invalid. Please make sure that all fields are correct.");
   });
 });

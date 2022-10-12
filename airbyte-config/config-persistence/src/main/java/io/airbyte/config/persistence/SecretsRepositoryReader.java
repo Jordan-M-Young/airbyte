@@ -10,7 +10,6 @@ import io.airbyte.commons.lang.Exceptions;
 import io.airbyte.config.ConfigSchema;
 import io.airbyte.config.DestinationConnection;
 import io.airbyte.config.SourceConnection;
-import io.airbyte.config.StandardWorkspace;
 import io.airbyte.config.WorkspaceServiceAccount;
 import io.airbyte.config.persistence.split_secrets.SecretsHydrator;
 import io.airbyte.validation.json.JsonValidationException;
@@ -106,13 +105,6 @@ public class SecretsRepositoryReader {
         workspaceServiceAccount.getHmacKey() != null ? secretsHydrator.hydrateSecretCoordinate(workspaceServiceAccount.getHmacKey()) : null;
 
     return Jsons.clone(workspaceServiceAccount).withJsonCredential(jsonCredential).withHmacKey(hmacKey);
-  }
-
-  public StandardWorkspace getWorkspaceWithSecrets(final UUID workspaceId, final boolean includeTombstone)
-      throws JsonValidationException, ConfigNotFoundException, IOException {
-    final StandardWorkspace workspace = configRepository.getStandardWorkspaceNoSecrets(workspaceId, includeTombstone);
-    // TODO: hydrate any secrets once they're introduced.
-    return workspace;
   }
 
 }

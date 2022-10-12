@@ -25,7 +25,6 @@ export interface DropDownOptionDataItem {
 }
 
 export const OptionView = styled.div<{
-  isFocused?: boolean;
   isSelected?: boolean;
   isDisabled?: boolean;
 }>`
@@ -35,15 +34,14 @@ export const OptionView = styled.div<{
   align-items: center;
   cursor: pointer;
   color: ${({ isSelected, theme }) => (isSelected ? theme.primaryColor : theme.textColor)};
-  background: ${({ isSelected, isFocused, theme }) =>
-    isSelected ? theme.primaryColor12 : isFocused ? theme.grey100 : theme.whiteColor};
+  background: ${({ isSelected, theme }) => (isSelected ? theme.primaryColor12 : theme.whiteColor)};
   border: none;
   padding: 10px 16px;
   font-size: 14px;
   line-height: 19px;
 
   &:hover {
-    background: ${({ isSelected, theme }) => (isSelected ? theme.primaryColor12 : theme.grey100)};
+    background: ${({ isSelected, theme }) => (isSelected ? theme.primaryColor12 : theme.greyColor0)};
   }
 `;
 
@@ -60,7 +58,6 @@ export const DropDownOption: React.FC<DropDownOptionProps> = (props) => {
         data-testid={dataTestId}
         isSelected={props.isSelected && !props.isMulti}
         isDisabled={props.isDisabled}
-        isFocused={props.isFocused}
       >
         <DropDownText primary={props.data.primary} secondary={props.data.secondary} fullText={props.data.fullText}>
           {props.isMulti && (

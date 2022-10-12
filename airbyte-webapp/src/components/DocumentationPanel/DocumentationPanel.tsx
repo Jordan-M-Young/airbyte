@@ -14,7 +14,6 @@ import { PageHeader } from "components/ui/PageHeader";
 
 import { useConfig } from "config";
 import { useDocumentation } from "hooks/services/useDocumentation";
-import { links } from "utils/links";
 import { useDocumentationPanelContext } from "views/Connector/ConnectorDocumentationLayout/DocumentationPanelContext";
 
 import styles from "./DocumentationPanel.module.scss";
@@ -37,12 +36,12 @@ export const DocumentationPanel: React.FC = () => {
         // In links replace with a link to the external documentation instead
         // The external path is the markdown URL without the "../../" prefix and the .md extension
         const docPath = url.path.replace(/^\.\.\/\.\.\/(.*?)(\.md)?$/, "$1");
-        return `${links.docsLink}/${docPath}`;
+        return `${config.links.docsLink}/${docPath}`;
       }
       return url.href;
     };
     return [[urls, sanitizeLinks], [rehypeSlug]];
-  }, [config.integrationUrl]);
+  }, [config.integrationUrl, config.links.docsLink]);
 
   const location = useLocation();
 

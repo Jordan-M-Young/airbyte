@@ -12,7 +12,6 @@ import io.airbyte.config.ActorCatalogFetchEvent;
 import io.airbyte.config.ActorDefinitionResourceRequirements;
 import io.airbyte.config.DestinationConnection;
 import io.airbyte.config.DestinationOAuthParameter;
-import io.airbyte.config.Geography;
 import io.airbyte.config.JobSyncConfig.NamespaceDefinitionType;
 import io.airbyte.config.Notification;
 import io.airbyte.config.Notification.NotificationType;
@@ -150,24 +149,21 @@ public class MockData {
         .withTombstone(false)
         .withNotifications(Collections.singletonList(notification))
         .withFirstCompletedSync(true)
-        .withFeedbackDone(true)
-        .withDefaultGeography(Geography.AUTO);
+        .withFeedbackDone(true);
 
     final StandardWorkspace workspace2 = new StandardWorkspace()
         .withWorkspaceId(WORKSPACE_ID_2)
         .withName("Another Workspace")
         .withSlug("another-workspace")
         .withInitialSetupComplete(true)
-        .withTombstone(false)
-        .withDefaultGeography(Geography.AUTO);
+        .withTombstone(false);
 
     final StandardWorkspace workspace3 = new StandardWorkspace()
         .withWorkspaceId(WORKSPACE_ID_3)
         .withName("Tombstoned")
         .withSlug("tombstoned")
         .withInitialSetupComplete(true)
-        .withTombstone(true)
-        .withDefaultGeography(Geography.AUTO);
+        .withTombstone(true);
 
     return Arrays.asList(workspace1, workspace2, workspace3);
   }
@@ -452,8 +448,7 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.ACTIVE)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     final StandardSync standardSync2 = new StandardSync()
         .withOperationIds(Arrays.asList(OPERATION_ID_1, OPERATION_ID_2))
@@ -468,8 +463,7 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.ACTIVE)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     final StandardSync standardSync3 = new StandardSync()
         .withOperationIds(Arrays.asList(OPERATION_ID_1, OPERATION_ID_2))
@@ -484,11 +478,10 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.ACTIVE)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     final StandardSync standardSync4 = new StandardSync()
-        .withOperationIds(Collections.emptyList())
+        .withOperationIds(Arrays.asList(OPERATION_ID_1, OPERATION_ID_2))
         .withConnectionId(CONNECTION_ID_4)
         .withSourceId(SOURCE_ID_2)
         .withDestinationId(DESTINATION_ID_2)
@@ -500,8 +493,7 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.DEPRECATED)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     final StandardSync standardSync5 = new StandardSync()
         .withOperationIds(Arrays.asList(OPERATION_ID_3))
@@ -516,8 +508,7 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.ACTIVE)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     final StandardSync standardSync6 = new StandardSync()
         .withOperationIds(Arrays.asList())
@@ -532,8 +523,7 @@ public class MockData {
         .withPrefix("")
         .withResourceRequirements(resourceRequirements)
         .withStatus(Status.DEPRECATED)
-        .withSchedule(schedule)
-        .withGeography(Geography.AUTO);
+        .withSchedule(schedule);
 
     return Arrays.asList(standardSync1, standardSync2, standardSync3, standardSync4, standardSync5, standardSync6);
   }

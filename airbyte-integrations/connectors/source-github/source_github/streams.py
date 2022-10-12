@@ -4,14 +4,13 @@
 
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Union
 from urllib import parse
 
 import pendulum
 import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.exceptions import DefaultBackoffException
 from requests.exceptions import HTTPError
 
 from .graphql import CursorStorage, QueryReactions, get_query_pull_requests, get_query_reviews
@@ -66,9 +65,8 @@ class GithubStream(HttpStream, ABC):
         return False
 
     def should_retry(self, response: requests.Response) -> bool:
-        if super().should_retry(response):
-            return True
-
+        # We don't call `super()` here because we have custom error handling and GitHub API sometimes returns strange
+        # errors. So in `read_records()` we have custom error handling which don't require to call `super()` here.
         retry_flag = (
             # The GitHub GraphQL API has limitations
             # https://docs.github.com/en/graphql/overview/resource-limitations
@@ -78,7 +76,12 @@ class GithubStream(HttpStream, ABC):
             or response.headers.get("X-RateLimit-Remaining") == "0"
             # Secondary rate limits
             # https://docs.github.com/en/rest/overview/resources-in-the-rest-api#secondary-rate-limits
-            or "Retry-After" in response.headers
+            or response.headers.get("Retry-After")
+            or response.status_code
+            in (
+                requests.codes.SERVER_ERROR,
+                requests.codes.BAD_GATEWAY,
+            )
         )
         if retry_flag:
             self.logger.info(
@@ -87,30 +90,22 @@ class GithubStream(HttpStream, ABC):
 
         return retry_flag
 
-    def backoff_time(self, response: requests.Response) -> Optional[float]:
+    def backoff_time(self, response: requests.Response) -> Union[int, float]:
         # This method is called if we run into the rate limit. GitHub limits requests to 5000 per hour and provides
         # `X-RateLimit-Reset` header which contains time when this hour will be finished and limits will be reset so
         # we again could have 5000 per another hour.
 
-        min_backoff_time = 60.0
+        if response.status_code == requests.codes.SERVER_ERROR:
+            return None
 
-        retry_after = response.headers.get("Retry-After")
-        if retry_after is not None:
-            return max(float(retry_after), min_backoff_time)
+        retry_after = int(response.headers.get("Retry-After", 0))
+        if retry_after:
+            return retry_after
 
         reset_time = response.headers.get("X-RateLimit-Reset")
-        if reset_time:
-            return max(float(reset_time) - time.time(), min_backoff_time)
+        backoff_time = float(reset_time) - time.time() if reset_time else 60
 
-    def get_error_display_message(self, exception: BaseException) -> Optional[str]:
-        if (
-            isinstance(exception, DefaultBackoffException)
-            and exception.response.status_code == requests.codes.BAD_GATEWAY
-            and self.large_stream
-            and self.page_size > 1
-        ):
-            return f'Please try to decrease the "Page size for large streams" below {self.page_size}. The stream "{self.name}" is a large stream, such streams can fail with 502 for high "page_size" values.'
-        return super().get_error_display_message(exception)
+        return max(backoff_time, 60)  # This is a guarantee that no negative value will be returned.
 
     def read_records(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping[str, Any]]:
         # get out the stream_slice parts for later use.
@@ -602,7 +597,6 @@ class Comments(IncrementalMixin, GithubStream):
 
     use_cache = True
     large_stream = True
-    max_retries = 7
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
         return f"repos/{stream_slice['repository']}/issues/comments"

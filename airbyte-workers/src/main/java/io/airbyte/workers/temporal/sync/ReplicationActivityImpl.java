@@ -43,7 +43,6 @@ import io.airbyte.workers.internal.NamespacingMapper;
 import io.airbyte.workers.process.AirbyteIntegrationLauncher;
 import io.airbyte.workers.process.IntegrationLauncher;
 import io.airbyte.workers.process.ProcessFactory;
-import io.airbyte.workers.sync.ReplicationLauncherWorker;
 import io.airbyte.workers.temporal.TemporalAttemptExecution;
 import io.micronaut.context.annotation.Value;
 import io.temporal.activity.Activity;

@@ -118,8 +118,6 @@
   "settings.accessManagement.roleEditors": "<b>Editors</b> can edit connections",
   "settings.accessManagement.roleAdmin": "<b>Admin</b> can also manage users",
 
-  "addUsers.success.title": "Invitations sent!",
-
   "credits.date": "Date",
   "credits.amount": "Credits",
 
@@ -151,8 +149,5 @@
 
   "verifyEmail.notification": "You successfully verified your email. Thank you.",
 
-  "webapp.cannotReachServer": "Cannot reach server.",
-
-  "inviteUsersHint.message": "Need help from a teammate to set up the {connector}?",
-  "inviteUsersHint.cta": "Invite users"
+  "webapp.cannotReachServer": "Cannot reach server."
 }

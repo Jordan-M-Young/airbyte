@@ -10,15 +10,16 @@ import { CheckBox } from "components/ui/CheckBox";
 import { LoadingBackdrop } from "components/ui/LoadingBackdrop";
 import { InfoTooltip, TooltipLearnMoreLink } from "components/ui/Tooltip";
 
+import { useConfig } from "config";
 import { SyncSchemaStream } from "core/domain/catalog";
 import { DestinationSyncMode } from "core/request/AirbyteClient";
 import { BatchEditProvider, useBulkEdit } from "hooks/services/BulkEdit/BulkEditService";
-import { ConnectionFormMode, useConnectionFormService } from "hooks/services/ConnectionForm/ConnectionFormService";
-import { links } from "utils/links";
+import { useConnectionFormService } from "hooks/services/ConnectionForm/ConnectionFormService";
 import { naturalComparatorBy } from "utils/objects";
 import CatalogTree from "views/Connection/CatalogTree";
 
 import { BulkHeader } from "../../CatalogTree/components/BulkHeader";
+import { ConnectionFormMode } from "../ConnectionForm";
 import Search from "./Search";
 import styles from "./SyncCatalogField.module.scss";
 
@@ -66,6 +67,7 @@ interface SchemaViewProps extends FieldProps<SyncSchemaStream[]> {
 
 const CatalogHeader: React.FC = () => {
   const { mode } = useConnectionFormService();
+  const config = useConfig();
   const { onCheckAll, selectedBatchNodeIds, allChecked } = useBulkEdit();
   const catalogHeaderStyle = classnames({
     [styles.catalogHeader]: mode !== "readonly",
@@ -98,7 +100,7 @@ const CatalogHeader: React.FC = () => {
         <FormattedMessage id="form.syncMode" />
         <InfoTooltip>
           <FormattedMessage id="connectionForm.syncType.info" />
-          <TooltipLearnMoreLink url={links.syncModeLink} />
+          <TooltipLearnMoreLink url={config.links.syncModeLink} />
         </InfoTooltip>
       </Cell>
       <Cell lighter>

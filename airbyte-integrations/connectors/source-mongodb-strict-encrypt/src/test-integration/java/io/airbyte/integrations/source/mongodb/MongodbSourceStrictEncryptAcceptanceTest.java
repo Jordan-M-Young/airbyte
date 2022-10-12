@@ -7,7 +7,6 @@ package io.airbyte.integrations.source.mongodb;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mongodb.client.MongoCollection;
@@ -18,8 +17,6 @@ import io.airbyte.db.mongodb.MongoDatabase;
 import io.airbyte.db.mongodb.MongoUtils.MongoInstanceType;
 import io.airbyte.integrations.standardtest.source.SourceAcceptanceTest;
 import io.airbyte.integrations.standardtest.source.TestDestinationEnv;
-import io.airbyte.protocol.models.AirbyteConnectionStatus;
-import io.airbyte.protocol.models.AirbyteConnectionStatus.Status;
 import io.airbyte.protocol.models.CatalogHelpers;
 import io.airbyte.protocol.models.ConfiguredAirbyteCatalog;
 import io.airbyte.protocol.models.ConfiguredAirbyteStream;
@@ -40,7 +37,7 @@ import org.junit.jupiter.api.Test;
 public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTest {
 
   private static final String DATABASE_NAME = "test";
-  private static final String COLLECTION_NAME = "acceptance_test1";
+  private static final String COLLECTION_NAME = "acceptance_test";
   private static final Path CREDENTIALS_PATH = Path.of("secrets/credentials.json");
   private static final String INSTANCE_TYPE = "instance_type";
 
@@ -81,7 +78,7 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
         .put("auth_source", "admin")
         .build());
 
-    final var credentials = String.format("%s:%s@", config.get("user").asText(),
+    var credentials = String.format("%s:%s@", config.get("user").asText(),
         config.get(JdbcUtils.PASSWORD_KEY).asText());
     final String connectionString = String.format("mongodb+srv://%s%s/%s?retryWrites=true&w=majority&tls=true",
         credentials,
@@ -145,26 +142,6 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
   void testSpec() throws Exception {
     final ConnectorSpecification actual = new MongodbSourceStrictEncrypt().spec();
     final ConnectorSpecification expected = getSpec();
-
-    assertEquals(expected, actual);
-  }
-
-  @Test
-  void testCheck() throws Exception {
-    final JsonNode instanceConfig = Jsons.jsonNode(ImmutableMap.builder()
-        .put("instance", MongoInstanceType.STANDALONE.getType())
-        .put("tls", false)
-        .build());
-
-    final JsonNode invalidStandaloneConfig = Jsons.clone(getConfig());
-
-    ((ObjectNode) invalidStandaloneConfig).put(INSTANCE_TYPE, instanceConfig);
-
-    final AirbyteConnectionStatus actual = new MongodbSourceStrictEncrypt().check(invalidStandaloneConfig);
-    final AirbyteConnectionStatus expected =
-        new AirbyteConnectionStatus()
-            .withStatus(Status.FAILED)
-            .withMessage("TLS connection must be used to read from MongoDB.");
 
     assertEquals(expected, actual);
   }

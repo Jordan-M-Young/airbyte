@@ -328,5 +328,4 @@ class MySqlStrictEncryptJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTes
   protected boolean supportsPerStream() {
     return true;
   }
-
 }

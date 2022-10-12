@@ -5,20 +5,26 @@ import React, { ChangeEvent, useState } from "react";
 import { Input } from "components/ui/Input";
 import { Text } from "components/ui/Text";
 
-import { useConnectionEditService } from "hooks/services/ConnectionEdit/ConnectionEditService";
+import { buildConnectionUpdate } from "core/domain/connection";
+import { WebBackendConnectionRead } from "core/request/AirbyteClient";
+import { useUpdateConnection } from "hooks/services/useConnectionHook";
 import withKeystrokeHandler from "utils/withKeystrokeHandler";
 
 import styles from "./ConnectionName.module.scss";
 
+interface ConnectionNameProps {
+  connection: WebBackendConnectionRead;
+}
+
 const InputWithKeystroke = withKeystrokeHandler(Input);
 
-export const ConnectionName: React.FC = () => {
-  const { connection, updateConnection } = useConnectionEditService();
+export const ConnectionName: React.FC<ConnectionNameProps> = ({ connection }) => {
   const { name } = connection;
   const [editingState, setEditingState] = useState(false);
   const [loading, setLoading] = useState(false);
   const [connectionName, setConnectionName] = useState<string | undefined>(connection.name);
   const [connectionNameBackup, setConnectionNameBackup] = useState(connectionName);
+  const { mutateAsync: updateConnection } = useUpdateConnection();
 
   const inputChange = ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => setConnectionName(value);
 
@@ -48,10 +54,7 @@ export const ConnectionName: React.FC = () => {
     try {
       setLoading(true);
 
-      await updateConnection({
-        name: connectionNameTrimmed,
-        connectionId: connection.connectionId,
-      });
+      await updateConnection(buildConnectionUpdate(connection, { name: connectionNameTrimmed }));
 
       setConnectionName(connectionNameTrimmed);
       setConnectionNameBackup(connectionNameTrimmed);

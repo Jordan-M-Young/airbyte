@@ -7,7 +7,6 @@ import { DropDown } from "components/ui/DropDown";
 
 import { NamespaceDefinitionType } from "../../../../core/request/AirbyteClient";
 import styles from "./NamespaceDefinitionField.module.scss";
-
 export const StreamOptions = [
   {
     value: NamespaceDefinitionType.source,

@@ -2,7 +2,6 @@
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
 
-import os
 from dataclasses import InitVar, dataclass
 from functools import lru_cache
 from typing import Any, Mapping, MutableMapping, Optional, Union
@@ -73,14 +72,14 @@ class HttpRequester(Requester, JsonSchemaMixin):
         return self.authenticator
 
     def get_url_base(self):
-        return os.path.join(self.url_base.eval(self.config), "")
+        return self.url_base.eval(self.config)
 
     def get_path(
         self, *, stream_state: Optional[StreamState], stream_slice: Optional[StreamSlice], next_page_token: Optional[Mapping[str, Any]]
     ) -> str:
         kwargs = {"stream_state": stream_state, "stream_slice": stream_slice, "next_page_token": next_page_token}
         path = self.path.eval(self.config, **kwargs)
-        return path.strip("/")
+        return path
 
     def get_method(self):
         return self._method

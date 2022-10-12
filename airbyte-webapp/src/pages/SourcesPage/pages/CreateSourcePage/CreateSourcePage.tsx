@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useNavigate } from "react-router-dom";
 
-import { CloudInviteUsersHint } from "components/CloudInviteUsersHint";
 import { FormPageContent } from "components/ConnectorBlocks";
 import HeadTitle from "components/HeadTitle";
 import { PageHeader } from "components/ui/PageHeader";
@@ -48,7 +47,6 @@ const CreateSourcePage: React.FC = () => {
         <PageHeader title={null} middleTitleBlock={<FormattedMessage id="sources.newSourceTitle" />} />
         <FormPageContent>
           <SourceForm onSubmit={onSubmitSourceStep} sourceDefinitions={sourceDefinitions} hasSuccess={successRequest} />
-          <CloudInviteUsersHint connectorType="source" />
         </FormPageContent>
       </ConnectorDocumentationWrapper>
     </>

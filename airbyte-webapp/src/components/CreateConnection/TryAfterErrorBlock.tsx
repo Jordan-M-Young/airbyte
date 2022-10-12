@@ -12,7 +12,7 @@ interface TryAfterErrorBlockProps {
   onClick: () => void;
 }
 
-export const TryAfterErrorBlock: React.FC<TryAfterErrorBlockProps> = ({ message, onClick }) => (
+const TryAfterErrorBlock: React.FC<TryAfterErrorBlockProps> = ({ message, onClick }) => (
   <div className={styles.container}>
     <StatusIcon big />
     <Text as="p" size="lg" centered className={styles.message}>
@@ -23,3 +23,5 @@ export const TryAfterErrorBlock: React.FC<TryAfterErrorBlockProps> = ({ message,
     </Button>
   </div>
 );
+
+export default TryAfterErrorBlock;

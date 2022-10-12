@@ -9,7 +9,8 @@ MAIN_REQUIREMENTS = [
     "airbyte-cdk~=0.1.56",
     "google-api-python-client~=2.64.0",
     "google-auth-httplib2~=0.1.0",
-    "google-auth-oauthlib~=0.5.3"
+    "google-auth-oauthlib~=0.5.3",
+    "pydash~=5.1.1"
 ]
 
 TEST_REQUIREMENTS = [

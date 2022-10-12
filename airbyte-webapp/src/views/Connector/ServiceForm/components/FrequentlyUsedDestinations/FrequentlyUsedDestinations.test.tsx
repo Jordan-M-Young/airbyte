@@ -18,13 +18,13 @@ const renderFrequentlyUsedDestinationsComponent = (props: FrequentlyUsedDestinat
 
 describe("<FrequentlyUsedDestinations />", () => {
   it("should renders with mock data without crash", () => {
-    const component = renderFrequentlyUsedDestinationsComponent({
+    const { asFragment } = renderFrequentlyUsedDestinationsComponent({
       destinations: mockData,
       onDestinationSelect: jest.fn(),
       propertyPath: "serviceType",
     });
 
-    expect(component).toMatchSnapshot();
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("should call provided handler with right param", async () => {

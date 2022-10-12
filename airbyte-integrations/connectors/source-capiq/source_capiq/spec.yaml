@@ -1,0 +1,62 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Capiq Spec
+  type: object
+  required:
+    - fernet_string
+    - capiq_user_name
+    - capiq_password
+    - capiq_endpoint
+    - mongo_password
+  properties:
+    fernet_string:
+      type: string
+      title: Fernet Secret
+      description: fernet signing secret
+      airbyte_secret: true
+    capiq_user_name:
+      type: string
+      title: Username
+      description: CapIQ username
+    capiq_password:
+      type: string
+      title: CapIQ Password
+      descripiton: CapIQ password
+      airbyte_secret: true
+    capiq_endpoint:
+      type: string
+      title: CapIQ Endpoint
+      description: Query Endpoint
+    mongo_host:
+      type: string
+      title: MongoDB Host
+      description: MongoDB instance to pull companies from
+      airbyte_secret: true
+    mongo_password:
+      type: string
+      title: Mongo Password
+      description: Password string for MongoDB instance
+      airbyte_secret: true
+    start_date:
+      type: string
+      title: Start Date
+      description: Lower Bound for CapIQ query range
+      examples:
+        - '08/16/2022'
+    end_date:
+      type: string
+      title: End Date
+      description: Upper Bound for CapIQ query range
+      examples:
+        - '11/23/2022'
+    mnemonics:
+      type: array
+      title: Mnemnonics
+      description: Array of mnemnonics used to access various datafields in the CapIQ ecosystem
+      examples:
+        - '["IQ_PROFESSIONAL","IQ_PROFESSIONAL_TITLE","IQ_PROFESSIONAL_BACKGROUND"]'
+    
+    
+
+    

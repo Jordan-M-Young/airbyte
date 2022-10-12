@@ -220,7 +220,7 @@ cmd_publish() {
 
   # Install docker emulators
   # TODO: Don't run this command on M1 macs locally (it won't work and isn't needed)
-  apt-get update && apt-get install -y qemu-user-static
+  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
   # log into docker
   if test -z "${DOCKER_HUB_USERNAME}"; then

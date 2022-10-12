@@ -16,7 +16,6 @@ import {
   WebBackendConnectionRead,
 } from "core/request/AirbyteClient";
 import { useTrackPage, PageTrackingCodes } from "hooks/services/Analytics";
-import { ConnectionFormMode } from "hooks/services/ConnectionForm/ConnectionFormService";
 import { FeatureItem, useFeature } from "hooks/services/Feature";
 import { useUpdateConnection } from "hooks/services/useConnectionHook";
 import { useCurrentWorkspace } from "hooks/services/useWorkspace";
@@ -24,6 +23,7 @@ import { useGetDestinationDefinitionSpecification } from "services/connector/Des
 import { FormikOnSubmit } from "types/formik";
 import { NormalizationField } from "views/Connection/ConnectionForm/components/NormalizationField";
 import { TransformationField } from "views/Connection/ConnectionForm/components/TransformationField";
+import { ConnectionFormMode } from "views/Connection/ConnectionForm/ConnectionForm";
 import {
   getInitialNormalization,
   getInitialTransformations,

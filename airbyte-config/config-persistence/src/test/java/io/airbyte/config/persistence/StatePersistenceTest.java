@@ -558,7 +558,7 @@ class StatePersistenceTest extends BaseDatabaseConfigPersistenceTest {
     final DestinationConnection destinationConnection = MockData.destinationConnections().get(0);
     final StandardSync sync = MockData.standardSyncs().get(0);
 
-    configRepository.writeStandardWorkspaceNoSecrets(workspace);
+    configRepository.writeStandardWorkspace(workspace);
     configRepository.writeStandardSourceDefinition(sourceDefinition);
     configRepository.writeSourceConnectionNoSecrets(sourceConnection);
     configRepository.writeStandardDestinationDefinition(destinationDefinition);

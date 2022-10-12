@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "react-query";
 
+import { getFrequencyType } from "config/utils";
 import { Action, Namespace } from "core/analytics";
-import { getFrequencyFromScheduleData } from "core/analytics/utils";
 import { SyncSchema } from "core/domain/catalog";
 import { WebBackendConnectionService } from "core/domain/connection";
 import { ConnectionService } from "core/domain/connection/ConnectionService";
@@ -57,20 +57,37 @@ interface CreateConnectionProps {
   sourceCatalogId: string | undefined;
 }
 
-export const useWebConnectionService = () => {
+function useWebConnectionService() {
   const config = useConfig();
   const middlewares = useDefaultRequestMiddlewares();
   return useInitService(
     () => new WebBackendConnectionService(config.apiUrl, middlewares),
     [config.apiUrl, middlewares]
   );
-};
+}
 
 export function useConnectionService() {
   const config = useConfig();
   const middlewares = useDefaultRequestMiddlewares();
   return useInitService(() => new ConnectionService(config.apiUrl, middlewares), [config.apiUrl, middlewares]);
 }
+
+export const useConnectionLoad = (
+  connectionId: string
+): {
+  connection: WebBackendConnectionRead;
+  refreshConnectionCatalog: () => Promise<WebBackendConnectionRead>;
+} => {
+  const connection = useGetConnection(connectionId);
+  const connectionService = useWebConnectionService();
+
+  const refreshConnectionCatalog = async () => await connectionService.getConnection(connectionId, true);
+
+  return {
+    connection,
+    refreshConnectionCatalog,
+  };
+};
 
 export const useSyncConnection = () => {
   const service = useConnectionService();
@@ -83,7 +100,7 @@ export const useSyncConnection = () => {
       connector_source_definition_id: connection.source?.sourceDefinitionId,
       connector_destination: connection.destination?.destinationName,
       connector_destination_definition_id: connection.destination?.destinationDefinitionId,
-      frequency: getFrequencyFromScheduleData(connection.scheduleData),
+      frequency: getFrequencyType(connection.scheduleData?.basicSchedule),
     });
 
     return service.sync(connection.connectionId);
@@ -128,7 +145,7 @@ const useCreateConnection = () => {
 
       analyticsService.track(Namespace.CONNECTION, Action.CREATE, {
         actionDescription: "New connection created",
-        frequency: getFrequencyFromScheduleData(values.scheduleData),
+        frequency: getFrequencyType(values.scheduleData?.basicSchedule),
         connector_source_definition: source?.sourceName,
         connector_source_definition_id: sourceDefinition?.sourceDefinitionId,
         connector_destination_definition: destination?.destinationName,
@@ -211,7 +228,7 @@ export const useEnableConnection = () => {
         const action = connection.status === ConnectionStatus.active ? Action.REENABLE : Action.DISABLE;
 
         analyticsService.track(Namespace.CONNECTION, action, {
-          frequency: getFrequencyFromScheduleData(connection.scheduleData),
+          frequency: getFrequencyType(connection.scheduleData?.basicSchedule),
           connector_source: connection.source?.sourceName,
           connector_source_definition_id: connection.source?.sourceDefinitionId,
           connector_destination: connection.destination?.destinationName,

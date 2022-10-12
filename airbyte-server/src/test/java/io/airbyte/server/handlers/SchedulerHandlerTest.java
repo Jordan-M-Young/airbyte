@@ -189,8 +189,7 @@ class SchedulerHandlerTest {
 
     final SourceCoreConfig sourceCoreConfig = new SourceCoreConfig()
         .sourceDefinitionId(source.getSourceDefinitionId())
-        .connectionConfiguration(source.getConfiguration())
-        .workspaceId(source.getWorkspaceId());
+        .connectionConfiguration(source.getConfiguration());
 
     when(configRepository.getStandardSourceDefinition(source.getSourceDefinitionId()))
         .thenReturn(new StandardSourceDefinition()
@@ -506,8 +505,7 @@ class SchedulerHandlerTest {
 
     final SourceCoreConfig sourceCoreConfig = new SourceCoreConfig()
         .sourceDefinitionId(source.getSourceDefinitionId())
-        .connectionConfiguration(source.getConfiguration())
-        .workspaceId(source.getWorkspaceId());
+        .connectionConfiguration(source.getConfiguration());
     final ActorCatalog actorCatalog = new ActorCatalog()
         .withCatalog(Jsons.jsonNode(airbyteCatalog))
         .withCatalogHash("")
@@ -540,8 +538,7 @@ class SchedulerHandlerTest {
 
     final SourceCoreConfig sourceCoreConfig = new SourceCoreConfig()
         .sourceDefinitionId(source.getSourceDefinitionId())
-        .connectionConfiguration(source.getConfiguration())
-        .workspaceId(source.getWorkspaceId());
+        .connectionConfiguration(source.getConfiguration());
 
     when(configRepository.getStandardSourceDefinition(source.getSourceDefinitionId()))
         .thenReturn(new StandardSourceDefinition()
@@ -626,7 +623,7 @@ class SchedulerHandlerTest {
     when(configRepository.getAllStreamsForConnection(connectionId))
         .thenReturn(streamDescriptors);
 
-    when(eventRunner.resetConnection(connectionId, streamDescriptors, false))
+    when(eventRunner.resetConnection(connectionId, streamDescriptors))
         .thenReturn(manualOperationResult);
 
     doReturn(new JobInfoRead())
@@ -634,7 +631,7 @@ class SchedulerHandlerTest {
 
     schedulerHandler.resetConnection(new ConnectionIdRequestBody().connectionId(connectionId));
 
-    verify(eventRunner).resetConnection(connectionId, streamDescriptors, false);
+    verify(eventRunner).resetConnection(connectionId, streamDescriptors);
   }
 
   @Test

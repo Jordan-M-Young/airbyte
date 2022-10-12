@@ -25,8 +25,7 @@ export const CustomSelect = styled(Select)<
       border-color: ${({ theme, $error }) => ($error ? theme.dangerColor : theme.greyColor10)};
     }
 
-    &.react-select__control--menu-is-open,
-    &:focus-within {
+    &.react-select__control--menu-is-open {
       border: 1px solid ${({ theme }) => theme.primaryColor};
       box-shadow: none;
     }

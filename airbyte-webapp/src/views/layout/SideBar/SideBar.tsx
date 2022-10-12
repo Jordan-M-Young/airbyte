@@ -12,7 +12,6 @@ import Version from "components/Version";
 
 import { useConfig } from "config";
 import { useCurrentWorkspace } from "hooks/services/useWorkspace";
-import { links } from "utils/links";
 
 import { RoutePaths } from "../../../pages/routePaths";
 import ConnectionsIcon from "./components/ConnectionsIcon";
@@ -87,7 +86,7 @@ const SideBar: React.FC = () => {
       </div>
       <ul className={styles.menu}>
         <li>
-          <a href={links.updateLink} target="_blank" rel="noreferrer" className={styles.menuItem}>
+          <a href={config.links.updateLink} target="_blank" rel="noreferrer" className={styles.menuItem}>
             <FontAwesomeIcon className={styles.helpIcon} icon={faRocket} />
             <Text className={styles.text} size="sm">
               <FormattedMessage id="sidebar.update" />
@@ -103,19 +102,19 @@ const SideBar: React.FC = () => {
             options={[
               {
                 type: SidebarDropdownMenuItemType.LINK,
-                href: links.docsLink,
+                href: config.links.docsLink,
                 icon: <DocsIcon />,
                 displayName: <FormattedMessage id="sidebar.documentation" />,
               },
               {
                 type: SidebarDropdownMenuItemType.LINK,
-                href: links.slackLink,
+                href: config.links.slackLink,
                 icon: <FontAwesomeIcon icon={faSlack} />,
                 displayName: <FormattedMessage id="sidebar.joinSlack" />,
               },
               {
                 type: SidebarDropdownMenuItemType.LINK,
-                href: links.recipesLink,
+                href: config.links.recipesLink,
                 icon: <RecipesIcon />,
                 displayName: <FormattedMessage id="sidebar.recipes" />,
               },

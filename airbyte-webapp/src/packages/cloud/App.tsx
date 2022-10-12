@@ -1,6 +1,5 @@
 import GlobalStyle from "global-styles";
 import React, { Suspense } from "react";
-import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 
@@ -46,9 +45,7 @@ const Services: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => (
               >
                 <AppServicesProvider>
                   <AuthenticationProvider>
-                    <HelmetProvider>
-                      <IntercomProvider>{children}</IntercomProvider>
-                    </HelmetProvider>
+                    <IntercomProvider>{children}</IntercomProvider>
                   </AuthenticationProvider>
                 </AppServicesProvider>
               </FeatureService>

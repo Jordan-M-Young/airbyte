@@ -54,9 +54,8 @@ class DefaultErrorHandler(ErrorHandler, JsonSchemaMixin):
     4. ignore HTTP 404
     `
       error_handler:
-        response_filters:
-          - http_codes: [ 404 ]
-            action: IGNORE
+        - http_codes: [ 404 ]
+          action: IGNORE
     `
     5. retry if error message contains `retrythisrequest!` substring
     `

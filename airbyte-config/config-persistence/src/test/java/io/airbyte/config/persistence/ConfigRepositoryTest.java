@@ -88,7 +88,7 @@ class ConfigRepositoryTest {
   void assertReturnsWorkspace(final StandardWorkspace workspace) throws ConfigNotFoundException, IOException, JsonValidationException {
     when(configPersistence.getConfig(ConfigSchema.STANDARD_WORKSPACE, WORKSPACE_ID.toString(), StandardWorkspace.class)).thenReturn(workspace);
 
-    assertEquals(workspace, configRepository.getStandardWorkspaceNoSecrets(WORKSPACE_ID, true));
+    assertEquals(workspace, configRepository.getStandardWorkspace(WORKSPACE_ID, true));
   }
 
   @ParameterizedTest
@@ -111,11 +111,11 @@ class ConfigRepositoryTest {
         .getSourceConnection(sourceId);
     doReturn(mWorkflow)
         .when(configRepository)
-        .getStandardWorkspaceNoSecrets(WORKSPACE_ID, isTombstone);
+        .getStandardWorkspace(WORKSPACE_ID, isTombstone);
 
     configRepository.getStandardWorkspaceFromConnection(connectionId, isTombstone);
 
-    verify(configRepository).getStandardWorkspaceNoSecrets(WORKSPACE_ID, isTombstone);
+    verify(configRepository).getStandardWorkspace(WORKSPACE_ID, isTombstone);
   }
 
   @Test
@@ -452,7 +452,7 @@ class ConfigRepositoryTest {
     final StandardWorkspace workspace = new StandardWorkspace().withWorkspaceId(WORKSPACE_ID).withTombstone(false);
     doReturn(workspace)
         .when(configRepository)
-        .getStandardWorkspaceNoSecrets(WORKSPACE_ID, false);
+        .getStandardWorkspace(WORKSPACE_ID, false);
 
     configRepository.setFeedback(WORKSPACE_ID);
 

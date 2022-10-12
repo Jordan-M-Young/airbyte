@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import { Button } from "components/ui/Button";
 
-import { ConnectionFormMode } from "hooks/services/ConnectionForm/ConnectionFormService";
+import { ConnectionFormMode } from "views/Connection/ConnectionForm/ConnectionForm";
 
 const Content = styled.div`
   display: flex;

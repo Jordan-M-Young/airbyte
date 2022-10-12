@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CreateConnectionForm } from "components/CreateConnection/CreateConnectionForm";
+import { CreateConnection } from "components/CreateConnection/CreateConnection";
 
 import { useDestinationList } from "hooks/services/useDestinationHook";
 import { useSourceList } from "hooks/services/useSourceHook";
@@ -14,11 +14,7 @@ const ConnectionStep: React.FC<ConnectionStepProps> = ({ onNextStep: afterSubmit
   const { destinations } = useDestinationList();
 
   return (
-    <CreateConnectionForm
-      source={sources[0]}
-      destination={destinations[0]}
-      afterSubmitConnection={afterSubmitConnection}
-    />
+    <CreateConnection source={sources[0]} destination={destinations[0]} afterSubmitConnection={afterSubmitConnection} />
   );
 };
 

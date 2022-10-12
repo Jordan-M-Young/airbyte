@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import io.airbyte.commons.constants.AirbyteSecretConstants;
 import io.airbyte.commons.json.Jsons;
 import java.io.IOException;
 import java.io.InputStream;
@@ -215,7 +214,7 @@ class JsonSecretsProcessorTest {
     final JsonNode dst = Jsons.jsonNode(ImmutableMap.builder()
         .put(FIELD_1, VALUE_1)
         .put(FIELD_2, 2)
-        .put(SECRET_1, AirbyteSecretConstants.SECRETS_MASK)
+        .put(SECRET_1, JsonSecretsProcessor.SECRETS_MASK)
         .put(SECRET_2, "newvalue")
         .build());
 
@@ -242,7 +241,7 @@ class JsonSecretsProcessorTest {
     final JsonNode dst = Jsons.jsonNode(ImmutableMap.builder()
         .put(FIELD_1, VALUE_1)
         .put(FIELD_2, 2)
-        .put(SECRET_1, AirbyteSecretConstants.SECRETS_MASK)
+        .put(SECRET_1, JsonSecretsProcessor.SECRETS_MASK)
         .build());
 
     final JsonNode expected = dst.deepCopy();
@@ -264,7 +263,7 @@ class JsonSecretsProcessorTest {
 
     final JsonNode dstOneOf = Jsons.jsonNode(ImmutableMap.builder()
         .put(S3_BUCKET_NAME, NAME)
-        .put(SECRET_ACCESS_KEY, AirbyteSecretConstants.SECRETS_MASK)
+        .put(SECRET_ACCESS_KEY, JsonSecretsProcessor.SECRETS_MASK)
         .build());
     final JsonNode dst = Jsons.jsonNode(ImmutableMap.builder()
         .put(WAREHOUSE, HOUSE)
@@ -289,7 +288,7 @@ class JsonSecretsProcessorTest {
 
     final JsonNode dstOneOf = Jsons.jsonNode(ImmutableMap.builder()
         .put(S3_BUCKET_NAME, NAME)
-        .put(SECRET_ACCESS_KEY, AirbyteSecretConstants.SECRETS_MASK)
+        .put(SECRET_ACCESS_KEY, JsonSecretsProcessor.SECRETS_MASK)
         .build());
     final JsonNode dst = Jsons.jsonNode(ImmutableMap.builder()
         .put(WAREHOUSE, HOUSE)
@@ -518,7 +517,7 @@ class JsonSecretsProcessorTest {
       final JsonNode dst = Jsons.jsonNode(ImmutableMap.builder()
           .put(FIELD_1, VALUE_1)
           .put(FIELD_2, 2)
-          .put(SECRET_1, AirbyteSecretConstants.SECRETS_MASK)
+          .put(SECRET_1, JsonSecretsProcessor.SECRETS_MASK)
           .put(SECRET_2, "newvalue")
           .build());
 

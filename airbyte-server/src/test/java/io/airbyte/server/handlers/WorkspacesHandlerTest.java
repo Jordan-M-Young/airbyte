@@ -30,14 +30,12 @@ import io.airbyte.api.model.generated.WorkspaceReadList;
 import io.airbyte.api.model.generated.WorkspaceUpdate;
 import io.airbyte.api.model.generated.WorkspaceUpdateName;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.config.Geography;
 import io.airbyte.config.Notification;
 import io.airbyte.config.Notification.NotificationType;
 import io.airbyte.config.SlackNotificationConfiguration;
 import io.airbyte.config.StandardWorkspace;
 import io.airbyte.config.persistence.ConfigNotFoundException;
 import io.airbyte.config.persistence.ConfigRepository;
-import io.airbyte.config.persistence.SecretsRepositoryWriter;
 import io.airbyte.server.converters.NotificationConverter;
 import io.airbyte.validation.json.JsonValidationException;
 import java.io.IOException;
@@ -55,7 +53,6 @@ class WorkspacesHandlerTest {
 
   public static final String FAILURE_NOTIFICATION_WEBHOOK = "http://airbyte.notifications/failure";
   private ConfigRepository configRepository;
-  private SecretsRepositoryWriter secretsRepositoryWriter;
   private ConnectionsHandler connectionsHandler;
   private DestinationHandler destinationHandler;
   private SourceHandler sourceHandler;
@@ -67,23 +64,16 @@ class WorkspacesHandlerTest {
   private static final String TEST_WORKSPACE_NAME = "test workspace";
   private static final String TEST_WORKSPACE_SLUG = "test-workspace";
 
-  private static final io.airbyte.api.model.generated.Geography GEOGRAPHY_AUTO =
-      io.airbyte.api.model.generated.Geography.AUTO;
-  private static final io.airbyte.api.model.generated.Geography GEOGRAPHY_US =
-      io.airbyte.api.model.generated.Geography.US;
-
   @SuppressWarnings("unchecked")
   @BeforeEach
   void setUp() {
     configRepository = mock(ConfigRepository.class);
-    secretsRepositoryWriter = new SecretsRepositoryWriter(configRepository, Optional.empty(), Optional.empty());
     connectionsHandler = mock(ConnectionsHandler.class);
     destinationHandler = mock(DestinationHandler.class);
     sourceHandler = mock(SourceHandler.class);
     uuidSupplier = mock(Supplier.class);
     workspace = generateWorkspace();
-    workspacesHandler = new WorkspacesHandler(configRepository, secretsRepositoryWriter, connectionsHandler,
-        destinationHandler, sourceHandler, uuidSupplier);
+    workspacesHandler = new WorkspacesHandler(configRepository, connectionsHandler, destinationHandler, sourceHandler, uuidSupplier);
   }
 
   private StandardWorkspace generateWorkspace() {
@@ -99,8 +89,7 @@ class WorkspacesHandlerTest {
         .withAnonymousDataCollection(false)
         .withSecurityUpdates(false)
         .withTombstone(false)
-        .withNotifications(List.of(generateNotification()))
-        .withDefaultGeography(Geography.AUTO);
+        .withNotifications(List.of(generateNotification()));
   }
 
   private Notification generateNotification() {
@@ -124,7 +113,7 @@ class WorkspacesHandlerTest {
     final UUID uuid = UUID.randomUUID();
     when(uuidSupplier.get()).thenReturn(uuid);
 
-    configRepository.writeStandardWorkspaceNoSecrets(workspace);
+    configRepository.writeStandardWorkspace(workspace);
 
     final WorkspaceCreate workspaceCreate = new WorkspaceCreate()
         .name("new workspace")
@@ -132,8 +121,7 @@ class WorkspacesHandlerTest {
         .news(false)
         .anonymousDataCollection(false)
         .securityUpdates(false)
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_US);
+        .notifications(List.of(generateApiNotification()));
 
     final WorkspaceRead actualRead = workspacesHandler.createWorkspace(workspaceCreate);
     final WorkspaceRead expectedRead = new WorkspaceRead()
@@ -147,8 +135,7 @@ class WorkspacesHandlerTest {
         .news(false)
         .anonymousDataCollection(false)
         .securityUpdates(false)
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_US);
+        .notifications(List.of(generateApiNotification()));
 
     assertEquals(expectedRead, actualRead);
   }
@@ -163,7 +150,7 @@ class WorkspacesHandlerTest {
     final UUID uuid = UUID.randomUUID();
     when(uuidSupplier.get()).thenReturn(uuid);
 
-    configRepository.writeStandardWorkspaceNoSecrets(workspace);
+    configRepository.writeStandardWorkspace(workspace);
 
     final WorkspaceCreate workspaceCreate = new WorkspaceCreate()
         .name(workspace.getName())
@@ -185,8 +172,7 @@ class WorkspacesHandlerTest {
         .news(false)
         .anonymousDataCollection(false)
         .securityUpdates(false)
-        .notifications(Collections.emptyList())
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(Collections.emptyList());
 
     assertTrue(actualRead.getSlug().startsWith(workspace.getSlug()));
     assertNotEquals(workspace.getSlug(), actualRead.getSlug());
@@ -208,7 +194,7 @@ class WorkspacesHandlerTest {
     final DestinationRead destination = new DestinationRead();
     final SourceRead source = new SourceRead();
 
-    when(configRepository.getStandardWorkspaceNoSecrets(workspace.getWorkspaceId(), false)).thenReturn(workspace);
+    when(configRepository.getStandardWorkspace(workspace.getWorkspaceId(), false)).thenReturn(workspace);
 
     when(configRepository.listStandardWorkspaces(false)).thenReturn(Collections.singletonList(workspace));
 
@@ -245,8 +231,7 @@ class WorkspacesHandlerTest {
         .news(workspace.getNews())
         .anonymousDataCollection(workspace.getAnonymousDataCollection())
         .securityUpdates(workspace.getSecurityUpdates())
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(List.of(generateApiNotification()));
 
     final WorkspaceRead expectedWorkspaceRead2 = new WorkspaceRead()
         .workspaceId(workspace2.getWorkspaceId())
@@ -259,8 +244,7 @@ class WorkspacesHandlerTest {
         .news(workspace2.getNews())
         .anonymousDataCollection(workspace2.getAnonymousDataCollection())
         .securityUpdates(workspace2.getSecurityUpdates())
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(List.of(generateApiNotification()));
 
     final WorkspaceReadList actualWorkspaceReadList = workspacesHandler.listWorkspaces();
 
@@ -270,7 +254,7 @@ class WorkspacesHandlerTest {
 
   @Test
   void testGetWorkspace() throws JsonValidationException, ConfigNotFoundException, IOException {
-    when(configRepository.getStandardWorkspaceNoSecrets(workspace.getWorkspaceId(), false)).thenReturn(workspace);
+    when(configRepository.getStandardWorkspace(workspace.getWorkspaceId(), false)).thenReturn(workspace);
 
     final WorkspaceIdRequestBody workspaceIdRequestBody = new WorkspaceIdRequestBody().workspaceId(workspace.getWorkspaceId());
 
@@ -285,8 +269,7 @@ class WorkspacesHandlerTest {
         .news(false)
         .anonymousDataCollection(false)
         .securityUpdates(false)
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(List.of(generateApiNotification()));
 
     assertEquals(workspaceRead, workspacesHandler.getWorkspace(workspaceIdRequestBody));
   }
@@ -307,8 +290,7 @@ class WorkspacesHandlerTest {
         .news(workspace.getNews())
         .anonymousDataCollection(workspace.getAnonymousDataCollection())
         .securityUpdates(workspace.getSecurityUpdates())
-        .notifications(NotificationConverter.toApiList(workspace.getNotifications()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(NotificationConverter.toApiList(workspace.getNotifications()));
 
     assertEquals(workspaceRead, workspacesHandler.getWorkspaceBySlug(slugRequestBody));
   }
@@ -324,8 +306,7 @@ class WorkspacesHandlerTest {
         .news(false)
         .initialSetupComplete(true)
         .displaySetupWizard(false)
-        .notifications(List.of(apiNotification))
-        .defaultGeography(GEOGRAPHY_US);
+        .notifications(List.of(apiNotification));
 
     final Notification expectedNotification = generateNotification();
     expectedNotification.getSlackConfiguration().withWebhook("updated");
@@ -341,10 +322,9 @@ class WorkspacesHandlerTest {
         .withInitialSetupComplete(true)
         .withDisplaySetupWizard(false)
         .withTombstone(false)
-        .withNotifications(List.of(expectedNotification))
-        .withDefaultGeography(Geography.US);
+        .withNotifications(List.of(expectedNotification));
 
-    when(configRepository.getStandardWorkspaceNoSecrets(workspace.getWorkspaceId(), false))
+    when(configRepository.getStandardWorkspace(workspace.getWorkspaceId(), false))
         .thenReturn(workspace)
         .thenReturn(expectedWorkspace);
 
@@ -363,10 +343,9 @@ class WorkspacesHandlerTest {
         .news(false)
         .anonymousDataCollection(true)
         .securityUpdates(false)
-        .notifications(List.of(expectedNotificationRead))
-        .defaultGeography(GEOGRAPHY_US);
+        .notifications(List.of(expectedNotificationRead));
 
-    verify(configRepository).writeStandardWorkspaceNoSecrets(expectedWorkspace);
+    verify(configRepository).writeStandardWorkspace(expectedWorkspace);
 
     assertEquals(expectedWorkspaceRead, actualWorkspaceRead);
   }
@@ -390,10 +369,9 @@ class WorkspacesHandlerTest {
         .withInitialSetupComplete(workspace.getInitialSetupComplete())
         .withDisplaySetupWizard(workspace.getDisplaySetupWizard())
         .withTombstone(false)
-        .withNotifications(workspace.getNotifications())
-        .withDefaultGeography(Geography.AUTO);
+        .withNotifications(workspace.getNotifications());
 
-    when(configRepository.getStandardWorkspaceNoSecrets(workspace.getWorkspaceId(), false))
+    when(configRepository.getStandardWorkspace(workspace.getWorkspaceId(), false))
         .thenReturn(workspace)
         .thenReturn(expectedWorkspace);
 
@@ -410,10 +388,9 @@ class WorkspacesHandlerTest {
         .news(workspace.getNews())
         .anonymousDataCollection(workspace.getAnonymousDataCollection())
         .securityUpdates(workspace.getSecurityUpdates())
-        .notifications(List.of(generateApiNotification()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(List.of(generateApiNotification()));
 
-    verify(configRepository).writeStandardWorkspaceNoSecrets(expectedWorkspace);
+    verify(configRepository).writeStandardWorkspace(expectedWorkspace);
 
     assertEquals(expectedWorkspaceRead, actualWorkspaceRead);
   }
@@ -428,7 +405,7 @@ class WorkspacesHandlerTest {
         .email(EXPECTED_NEW_EMAIL);
 
     final StandardWorkspace expectedWorkspace = Jsons.clone(workspace).withEmail(EXPECTED_NEW_EMAIL).withAnonymousDataCollection(true);
-    when(configRepository.getStandardWorkspaceNoSecrets(workspace.getWorkspaceId(), false))
+    when(configRepository.getStandardWorkspace(workspace.getWorkspaceId(), false))
         .thenReturn(workspace)
         .thenReturn(expectedWorkspace);
     // The same as the original workspace, with only the email and data collection flags changed.
@@ -443,11 +420,10 @@ class WorkspacesHandlerTest {
         .news(workspace.getNews())
         .anonymousDataCollection(true)
         .securityUpdates(workspace.getSecurityUpdates())
-        .notifications(NotificationConverter.toApiList(workspace.getNotifications()))
-        .defaultGeography(GEOGRAPHY_AUTO);
+        .notifications(NotificationConverter.toApiList(workspace.getNotifications()));
 
     final WorkspaceRead actualWorkspaceRead = workspacesHandler.updateWorkspace(workspaceUpdate);
-    verify(configRepository).writeStandardWorkspaceNoSecrets(expectedWorkspace);
+    verify(configRepository).writeStandardWorkspace(expectedWorkspace);
     assertEquals(expectedWorkspaceRead, actualWorkspaceRead);
   }
 
